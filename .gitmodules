@@ -1,0 +1,6 @@
+[submodule "gym-pybullet-drones"]
+	path = gym-pybullet-drones
+	url = https://github.com/utiasDSL/gym-pybullet-drones.git
+[submodule "acmpc_public"]
+	path = acmpc_public
+	url = https://github.com/uzh-rpg/acmpc_public.git
