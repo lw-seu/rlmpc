@@ -199,49 +199,63 @@ class ThrustRateAviary(BaseAviary):
         for k in range(action.shape[0]):
             target = action[k, :]
             if self.ACT_TYPE == ActionType.TR:
+
                 state = self._getDroneStateVector(k)
 
-                # 当前角速度
                 omega_now = state[13:16]
 
-                # 目标输入
-                F = target[0]
-                omega_des = target[1:4]
+                # ===== 输入 =====
+                F = target[0]              # 总推力 (N)
+                omega_des = target[1:4]    # 目标角速度
 
-                # ===== 1. 角速度 → 力矩（P控制）=====
-                Kp = np.array([0.1, 0.1, 0.2])   # z轴可以稍大一点
-                tau = Kp * (omega_des - omega_now)
+                # ===== 1. rate → torque（Crazyflie核心逻辑）=====
+                tau_rp_rate = 0.015
+                tau_yaw_rate = 0.0075
+
+                omega_err = np.array([
+                    (omega_des[0] - omega_now[0]) / tau_rp_rate,
+                    (omega_des[1] - omega_now[1]) / tau_rp_rate,
+                    (omega_des[2] - omega_now[2]) / tau_yaw_rate
+                ])
+
+                tau = self.J @ omega_err   # τ = J * ω_dot
 
                 tau_x, tau_y, tau_z = tau
 
-                # ===== 2. 控制分配（thrust + torque → 电机推力）=====
+                # ===== 2. 控制分配（和你之前一样）=====
                 l = self.L
-                kf = self.KF
-                km = self.KM
 
-                # 控制分配矩阵
                 A = np.array([
                     [1, 1, 1, 1],
                     [0,  l, 0, -l],
                     [-l, 0,  l, 0],
-                    [km, -km, km, -km]
+                    [1, -1, 1, -1]   # yaw torque方向
                 ])
 
                 b = np.array([F, tau_x, tau_y, tau_z])
 
-                # 解每个电机推力（fi = KF * rpm^2）
                 try:
                     forces = np.linalg.solve(A, b)
-                except np.linalg.LinAlgError:
+                except:
                     forces = np.ones(4) * (F / 4.0)
 
-                # ===== 3. 安全处理（非常重要）=====
                 forces = np.clip(forces, 0, None)
 
-                # ===== 4. 转成 RPM =====
-                rpm_k = np.sqrt(forces / kf)
+                # ===== 3. thrust → rpm（用Crazyflie拟合曲线反解）=====
+                a = 2.682e-10
+                b_coef = -5.167e-07
+                c = 3.783e-04
 
-                # 限幅（防炸）
+                rpm_k = np.zeros(4)
+
+                for i in range(4):
+                    f = forces[i]
+
+                    delta = b_coef**2 - 4 * a * (c - f)
+                    delta = max(delta, 0)
+
+                    rpm_k[i] = (-b_coef + np.sqrt(delta)) / (2 * a)
+
                 rpm_k = np.clip(rpm_k, 0, self.MAX_RPM)
 
                 rpm[k, :] = rpm_k
@@ -322,7 +336,7 @@ class ThrustRateAviary(BaseAviary):
             act_lo = -1
             act_hi = +1
             for i in range(self.ACTION_BUFFER_SIZE):
-                if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
+                if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL, ActionType.TR]:
                     obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
                     obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
                 elif self.ACT_TYPE==ActionType.PID:
