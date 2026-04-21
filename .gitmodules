@@ -5,6 +5,7 @@
 [submodule "acmpc_public"]
 	path = acmpc_public
 	url = https://github.com/uzh-rpg/acmpc_public.git
+	branch = main
 [submodule "stable-baselines3-change"]
 	path = stable-baselines3-change
 	url = https://github.com/lw-seu/stable-baselines3-change.git
