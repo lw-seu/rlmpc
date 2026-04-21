@@ -9,3 +9,9 @@
 [submodule "stable-baselines3-change"]
 	path = stable-baselines3-change
 	url = https://github.com/lw-seu/stable-baselines3-change.git
+[submodule "stable-baselines3"]
+    path = acmpc_public/stable-baselines3
+    url = https://github.com/uzh-rpg/stable-baselines3-acmpc.git
+[submodule "mpc.pytorch"]
+    path = acmpc_public/mpc.pytorch
+    url = https://github.com/locuslab/mpc.pytorch.git
