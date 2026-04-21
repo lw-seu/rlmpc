@@ -103,6 +103,8 @@ class ThrustRateAviary(BaseAviary):
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
+            
+        self.reset_infos = None
 
     ################################################################################
 
@@ -391,3 +393,51 @@ class ThrustRateAviary(BaseAviary):
             ############################################################
         else:
             print("[ERROR] in BaseRLAviary._computeObs()")
+            
+    def _computeInfo(self):
+        info = {}
+        
+        state = self._getDroneStateVector(0)
+
+        info['state'] = state
+        return info
+
+            
+    def reset(self,
+              seed : int = None,
+              options : dict = None):
+        """Resets the environment.
+
+        Parameters
+        ----------
+        seed : int, optional
+            Random seed.
+        options : dict[..], optional
+            Additional options, unused
+
+        Returns
+        -------
+        ndarray | dict[..]
+            The initial observation, check the specific implementation of `_computeObs()`
+            in each subclass for its format.
+        dict[..]
+            Additional information as a dictionary, check the specific implementation of `_computeInfo()`
+            in each subclass for its format.
+
+        """
+
+        super().reset(seed=seed, options=options)
+
+        p.resetSimulation(physicsClientId=self.CLIENT)
+        #### Housekeeping ##########################################
+        self._housekeeping()
+        #### Update and store the drones kinematic information #####
+        self._updateAndStoreKinematicInformation()
+        #### Start video recording #################################
+        self._startVideoRecording()
+        #### Return the initial observation ########################
+        initial_obs = self._computeObs()
+        initial_info = self._computeInfo()
+        
+        self.reset_infos = initial_info
+        return initial_obs, initial_info

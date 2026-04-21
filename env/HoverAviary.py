@@ -16,7 +16,7 @@ class HoverAviary(ThrustRateAviary):
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
-                 ctrl_freq: int = 30,
+                 ctrl_freq: int = 48,
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
@@ -119,16 +119,3 @@ class HoverAviary(ThrustRateAviary):
             return False
 
     ################################################################################
-    
-    def _computeInfo(self):
-        """Computes the current info dict(s).
-
-        Unused.
-
-        Returns
-        -------
-        dict[str, int]
-            Dummy value.
-
-        """
-        return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years

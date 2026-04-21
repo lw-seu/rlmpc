@@ -50,6 +50,9 @@ DEFAULT_ACT = ActionType('tr') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_
 DEFAULT_AGENTS = 2
 DEFAULT_MA = False
 
+state_dim = 20  # 你的状态维度，比如 p,q欧拉,v
+state_space = spaces.Box(low=-np.inf, high=np.inf, shape=(state_dim,), dtype=np.float32)
+
 
 class CustomNetwork(nn.Module):
     """
@@ -77,7 +80,7 @@ class CustomNetwork(nn.Module):
         self.latent_dim_vf = last_layer_dim_vf
 
 
-        self.T = int(os.environ["ACMPC_T"])
+        self.T = int(os.environ.get("ACMPC_T", 20)) 
         self.n_o = 28
         self.n_output = self.n_o * self.T
         self.device = th.device('cuda' if th.cuda.is_available() else 'cpu')
@@ -118,7 +121,12 @@ class CustomNetwork(nn.Module):
             states = th.unsqueeze(states, dim=0)
 
         # [p, q, v]:
-        states = states[:, 0:10]
+        # states = states[:, 0:10]
+        p = states[:, 0:3]
+        q = states[:, 3:7]
+        v = states[:, 10:13]
+
+        states = th.cat([p, q, v], dim=1)
 
         # Forward MLP to get cost function for MPC
         sigmoid_cost_all = self.policy_net(features_in)
@@ -223,7 +231,7 @@ class CustomNetwork(nn.Module):
 
         # Now we normalize the units, since the simulation environment later will unnormalize them by default
         # normalization_max = 8.5 # Max thrust per rotor in Newtons
-        normalization_max = self.mass * 9.8 * 2.25 / 4.0
+        normalization_max = self.dx.mass * 9.8 * 2.25 / 4.0
         force_mean = (normalization_max * 4 / self.dx.mass) / 2.0
         force_std = (normalization_max * 4 / self.dx.mass) / 2.0
         thrust_normalized = (thrust  - force_mean) / force_std
@@ -280,6 +288,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
                                 n_envs=1,
                                 seed=0
                                 )
+    print(train_env.reset.__func__) 
     eval_env = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
 
     #### Check the environment's spaces ########################
@@ -287,10 +296,16 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
     print('[INFO] Observation space:', train_env.observation_space)
 
     #### Train the model #######################################
-    model = PPO(MlpMpcPolicy,
-                train_env,
-                # tensorboard_log=filename+'/tb/',
-                verbose=1)
+    # model = PPO(MlpMpcPolicy,
+    #             train_env,
+    #             # tensorboard_log=filename+'/tb/',
+    #             verbose=1)
+    model = PPO(
+        MlpMpcPolicy,
+        train_env,
+        verbose=1,
+        rollout_buffer_kwargs=dict(state_space=state_space)
+    )
 
     #### Target cumulative rewards (problem-dependent) ##########
     target_reward = 467
@@ -361,9 +376,10 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
     obs, info = test_env.reset(seed=42, options={})
+    state = np.array([info["state"]]) 
     start = time.time()
     for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
-        action, _states = model.predict(obs,
+        action, _states = model.predict(obs, state=state,
                                         deterministic=True
                                         )
         obs, reward, terminated, truncated, info = test_env.step(action)
