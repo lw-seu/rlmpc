@@ -231,10 +231,11 @@ class CustomNetwork(nn.Module):
 
         # Now we normalize the units, since the simulation environment later will unnormalize them by default
         # normalization_max = 8.5 # Max thrust per rotor in Newtons
-        normalization_max = self.dx.mass * 9.8 * 2.25 / 4.0
-        force_mean = (normalization_max * 4 / self.dx.mass) / 2.0
-        force_std = (normalization_max * 4 / self.dx.mass) / 2.0
-        thrust_normalized = (thrust  - force_mean) / force_std
+        # normalization_max = self.dx.mass * 9.8 * 2.25 / 4.0
+        # force_mean = (normalization_max * 4 / self.dx.mass) / 2.0
+        # force_std = (normalization_max * 4 / self.dx.mass) / 2.0
+        thrust_max = self.dx.mass * 9.8 * 2.25 
+        thrust_normalized = th.div(thrust, thrust_max).to(device=self.device)
 
         # print("normalized_thrust_origin")
         # print(thrust_normalized)
