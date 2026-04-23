@@ -239,11 +239,11 @@ class CustomNetwork(nn.Module):
         # print("normalized_thrust_origin")
         # print(thrust_normalized)
 
-        omega_max = th.Tensor([10.0, 10.0, 4.0]).to(device=self.device)
+        # omega_max = th.Tensor([10.0, 10.0, 4.0]).to(device=self.device)
 
-        omegas_normalized = th.div(omegas, omega_max).to(device=self.device)
+        # omegas_normalized = th.div(omegas, omega_max).to(device=self.device)
 
-        inputs_normalized = th.cat((thrust_normalized.unsqueeze(1), omegas_normalized), dim=1).to(self.device)
+        inputs_normalized = th.cat((thrust_normalized.unsqueeze(1), omegas), dim=1).to(self.device)
 
 
         return inputs_normalized

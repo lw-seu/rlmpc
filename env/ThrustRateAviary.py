@@ -207,7 +207,7 @@ class ThrustRateAviary(BaseAviary):
                 omega_now = state[13:16]
 
                 # ===== 输入 =====
-                F = target[0]              # 总推力 (N)
+                F = target[0]*self.MAX_THRUST              # 总推力 (N)
                 omega_des = target[1:4]    # 目标角速度
 
                 # ===== 1. rate → torque（Crazyflie核心逻辑）=====

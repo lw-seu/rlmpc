@@ -199,7 +199,7 @@ class DroneDx(nn.Module):
         # self.g = torch.tensor([0, 0, -9.8066])
         self.g = torch.tensor([0, 0, -9.8])
 
-        self.goal_tau = torch.Tensor([0.0, 0.0, 0.0,
+        self.goal_tau = torch.Tensor([0.0, 0.0, 1.0,
                                       1.0, 0.0, 0.0, 0.0,
                                       0.0, 0.0, 0.0,
                                       0.0, 0.0, 0.0,
