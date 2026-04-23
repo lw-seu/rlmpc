@@ -139,8 +139,8 @@ class CustomNetwork(nn.Module):
 
         chunks = th.split(sigmoid_cost_all, chunk_length, dim=0)
         epsilon = 0.1
-        range_Q = 100000.0
-        range_p = 100000.0
+        range_Q = 100.0
+        range_p = 100.0
         # range_p_t = 2 * range_Q / 2 * self.dx.mass * 9.806
         range_p_t = 2 * range_Q / 2 * self.dx.mass * 9.8
         n_tau = 14
@@ -225,7 +225,7 @@ class CustomNetwork(nn.Module):
 
         # Return actions from MPC. These actions will be taken into account to create a gaussian distribution.
         # Units of first control input are thrust normalized by mass
-        thrust = nom_u[:, 0, 0]/self.dx.mass
+        thrust = nom_u[:, 0, 0]
         # The other 3 control inputs are the body rates, in rad/s
         omegas = nom_u[:,0,1:4]
 

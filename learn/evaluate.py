@@ -20,7 +20,7 @@ from gym_pybullet_drones.utils.utils import sync
 DEFAULT_OUTPUT_FOLDER = "results"
 DEFAULT_GUI = True
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_MODEL_PATH = "/home/lw/results/save-04.22.2026_17.44.06/best_model.zip"
+DEFAULT_MODEL_PATH = "/home/lw/results/save-04.23.2026_17.18.46/best_model.zip"
 DEFAULT_COLAB = False
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
